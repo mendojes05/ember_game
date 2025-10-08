@@ -60,12 +60,15 @@ class EmberPlayer extends SpriteAnimationComponent
   @override
   void update(double dt) {
     velocity.x = horizontalDirection * moveSpeed;
-    position += velocity * dt;
-    super.update(dt);
-    if (horizontalDirection < 0 && scale.x > 0) {
-      flipHorizontally();
-    } else if (horizontalDirection > 0 && scale.x < 0) {
-      flipHorizontally();
+
+    game.objectSpeed = 0;
+    // Prevent ember from going backwards at screen edge.
+    if (position.x - 36 <= 0 && horizontalDirection < 0) {
+      velocity.x = 0;
+    }
+    if (position.x + 64 >= game.size.x / 2 && horizontalDirection > 0) {
+      velocity.x = 0;
+      game.objectSpeed = -moveSpeed;
     }
 
     // Apply basic gravity
@@ -84,15 +87,21 @@ class EmberPlayer extends SpriteAnimationComponent
     // crashing through the ground or a platform.
     velocity.y = velocity.y.clamp(-jumpSpeed, terminalVelocity);
 
-    game.objectSpeed = 0;
-    // Prevent ember from going backwards at screen edge.
-    if (position.x - 36 <= 0 && horizontalDirection < 0) {
-      velocity.x = 0;
+    position += velocity * dt;
+
+    if (horizontalDirection < 0 && scale.x > 0) {
+      flipHorizontally();
+    } else if (horizontalDirection > 0 && scale.x < 0) {
+      flipHorizontally();
     }
-    // Prevent ember from going beyond half screen.
-    if (position.x + 64 >= game.size.x / 2 && horizontalDirection > 0) {
-      velocity.x = 0;
-      game.objectSpeed = -moveSpeed;
+
+    // If ember fell in pit, then game over.
+    if (position.y > game.size.y + size.y) {
+      game.health = 0;
+    }
+
+    if (game.health <= 0) {
+      removeFromParent();
     }
     super.update(dt);
   }
@@ -120,6 +129,7 @@ class EmberPlayer extends SpriteAnimationComponent
         position += collisionNormal.scaled(separationDistance);
       }
     }
+
     if (other is Star) {
       other.removeFromParent();
       game.starsCollected++;
@@ -129,6 +139,8 @@ class EmberPlayer extends SpriteAnimationComponent
     }
     super.onCollision(intersectionPoints, other);
   }
+
+
   // This method runs an opacity effect on ember
   // to make it blink.
 void hit() {
