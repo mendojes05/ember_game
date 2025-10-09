@@ -1,11 +1,12 @@
+import 'dart:ui';
 import 'package:flame/components.dart';
 import '../ember_quest.dart';
 import 'package:flutter/services.dart';
 import 'package:flame/collisions.dart';
+import '../objects/cherry.dart';
 import '../objects/ground_block.dart';
 import '../objects/platform_block.dart';
 import 'package:flame/effects.dart';
-
 import '../objects/star.dart';
 import 'water_enemy.dart';
 
@@ -27,6 +28,13 @@ class EmberPlayer extends SpriteAnimationComponent
 
   bool hasJumped = false;
   bool hitByEnemy = false;
+
+  bool isInvincible = false;
+  double invincibleTimer = 0.0;
+  static const double powerUpDuration = 5.0;
+  static const double blinkThreshold = 2.0;
+  bool isBlinking = false;
+  OpacityEffect? blinkFX;
 
 
   @override
@@ -103,6 +111,20 @@ class EmberPlayer extends SpriteAnimationComponent
     if (game.health <= 0) {
       removeFromParent();
     }
+
+    //Invincibility Timer
+    if (invincibleTimer > 0) {
+      invincibleTimer -= dt;
+
+      if(!isBlinking && invincibleTimer <= blinkThreshold){
+        startBlinkFX();
+        isBlinking = true;
+      }
+      if (invincibleTimer <= 0) {
+        endPowerUp();
+      }
+    }
+
     super.update(dt);
   }
 
@@ -134,8 +156,18 @@ class EmberPlayer extends SpriteAnimationComponent
       other.removeFromParent();
       game.starsCollected++;
     }
+    if (other is Cherry) {
+      other.removeFromParent();
+      powerUp();
+    }
+
     if (other is WaterEnemy) {
-      hit();
+      if (isInvincible) {
+        other.removeFromParent();
+      }
+      else {
+        hit();
+      }
     }
     super.onCollision(intersectionPoints, other);
   }
@@ -143,21 +175,74 @@ class EmberPlayer extends SpriteAnimationComponent
 
   // This method runs an opacity effect on ember
   // to make it blink.
-void hit() {
-  if (!hitByEnemy) {
-    game.health--;
-    hitByEnemy = true;
+  void hit() {
+    if (!hitByEnemy) {
+      game.health--;
+      hitByEnemy = true;
+    }
+    add(
+      OpacityEffect.fadeOut(
+        EffectController(
+          alternate: true,
+          duration: 0.1,
+          repeatCount: 5,
+        ),
+      )
+        ..onComplete = () {
+          hitByEnemy = false;
+        },
+    );
   }
-  add(
-    OpacityEffect.fadeOut(
+
+  void powerUp() {
+    // Start/refresh the timer
+    invincibleTimer = powerUpDuration;
+
+    // If we just became invincible, turn red
+    if (!isInvincible) {
+      isInvincible = true;
+      applyRed();
+    }
+    //stop blinking after refresh
+    if (isBlinking){
+      stopBlinkFX();
+      isBlinking = false;
+      opacity = 1.0;
+    }
+  }
+
+  void endPowerUp() {
+    isInvincible = false;
+    stopBlinkFX();
+    removeRed();
+    opacity = 1.0;
+  }
+
+  void applyRed(){
+    paint.colorFilter = const ColorFilter.mode(Color(0xFFFF0000), BlendMode.modulate);
+  }
+
+  void removeRed(){
+    paint.colorFilter = null;
+  }
+
+  void startBlinkFX() {
+    // Blink for the entire duration
+    const period = 0.2; // seconds per blink
+    final repeats = (invincibleTimer / period).ceil();
+    blinkFX = OpacityEffect.to(
+      0.3,
       EffectController(
         alternate: true,
-        duration: 0.1,
-        repeatCount: 5,
+        duration: period,
+        repeatCount: repeats,
       ),
-    )..onComplete = () {
-      hitByEnemy = false;
-    },
-  );
-}
+    );
+    add(blinkFX!);
+  }
+
+  void stopBlinkFX() {
+    blinkFX?.removeFromParent();
+    blinkFX = null;
+  }
 }

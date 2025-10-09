@@ -1,9 +1,9 @@
 import 'package:flame/components.dart';
-
 import '../actors/water_enemy.dart';
 import '../objects/ground_block.dart';
 import '../objects/platform_block.dart';
 import '../objects/star.dart';
+import '../objects/cherry.dart';
 
 class Block {
   // gridPosition position is always segment based X,Y.
@@ -27,6 +27,7 @@ final segment0 = [
   Block(Vector2(1, 0), GroundBlock),
   Block(Vector2(2, 0), GroundBlock),
   Block(Vector2(3, 0), GroundBlock),
+  Block(Vector2(3, 1), Cherry),
   Block(Vector2(4, 0), GroundBlock),
   Block(Vector2(5, 0), GroundBlock),
   Block(Vector2(5, 1), WaterEnemy),
@@ -75,6 +76,7 @@ final segment2 = [
   Block(Vector2(6, 5), PlatformBlock),
   Block(Vector2(6, 7), Star),
   Block(Vector2(7, 0), GroundBlock),
+  Block(Vector2(7, 1), Cherry),
   Block(Vector2(8, 0), GroundBlock),
   Block(Vector2(9, 0), GroundBlock),
 ];

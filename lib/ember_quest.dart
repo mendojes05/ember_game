@@ -9,6 +9,7 @@ import 'objects/star.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/events.dart';
 import 'overlays/hud.dart';
+import 'objects/cherry.dart';
 
 class EmberQuestGame extends FlameGame
     with HasCollisionDetection, HasKeyboardHandlerComponents {  // EmberQuestGame();
@@ -29,6 +30,7 @@ class EmberQuestGame extends FlameGame
       'heart.png',
       'star.png',
       'water_enemy.png',
+      'cherry.png'
     ]);
 
     // Everything in this tutorial assumes that the position
@@ -59,13 +61,22 @@ class EmberQuestGame extends FlameGame
             ),
           );
         case PlatformBlock:
-          add(PlatformBlock(
-            gridPosition: block.gridPosition,
-            xOffset: xPositionOffset,
-          ));
+          world.add(
+            PlatformBlock(
+              gridPosition: block.gridPosition,
+              xOffset: xPositionOffset,
+            ),
+          );
         case Star:
           world.add(
             Star(
+              gridPosition: block.gridPosition,
+              xOffset: xPositionOffset,
+            ),
+          );
+        case Cherry:
+          world.add(
+            Cherry(
               gridPosition: block.gridPosition,
               xOffset: xPositionOffset,
             ),
